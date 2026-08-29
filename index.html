@@ -193,7 +193,7 @@
             try {
                 // Wywołanie bezpiecznej funkcji RPC w bazie danych
                 const { data, error } = await supabaseClient.rpc('redeem_token', { 
-                    p_token: userToken 
+                    token: userToken 
                 });
 
                 if (error) {
