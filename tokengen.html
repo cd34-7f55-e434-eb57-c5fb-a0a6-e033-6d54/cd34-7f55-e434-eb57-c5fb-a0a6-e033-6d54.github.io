@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Generator Tokenów</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-dark: #09020e; 
+            --bg-mid: #00e04b44; 
+            --text-light: #eeeeee;
+            --text-subtle: #777777;
+            --glass-fill: rgba(255, 255, 255, 0.05); 
+            --border-clear: rgba(0, 255, 76, 0.377); 
+            --accent-green: #0dbba1; 
+            --accent-glow: rgba(0, 247, 103, 0.6);
+            --shadow-button: rgba(0, 255, 85, 0.4);
+            --error-red: #ff3333; 
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 15px;
+            box-sizing: border-box;
+            background-image: radial-gradient(circle at top left, var(--bg-mid) 5%, transparent 40%),
+                              radial-gradient(circle at bottom right, rgba(0, 255, 76, 0.1) 0%, transparent 45%);
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
+        #appContent, #loginCard {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .card {
+            background: var(--glass-fill);
+            backdrop-filter: blur(20px) brightness(1.1);
+            -webkit-backdrop-filter: blur(20px) brightness(1.1);
+            padding: 25px; 
+            border-radius: 24px; 
+            border: 1px solid var(--border-clear);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 20px var(--accent-glow) inset;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        h2, h3 {
+            color: var(--text-light);
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--accent-green);
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-clear);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            margin-top: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text-subtle);
+            font-size: 0.8rem;
+        }
+
+        input[type="email"], 
+        input[type="password"], 
+        input[type="number"], 
+        input[type="datetime-local"] {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border-clear);
+            border-radius: 12px;
+            box-sizing: border-box;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: var(--text-light);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-size: 0.9rem;
+            outline: none;
+            margin-bottom: 14px;
+            -webkit-appearance: none;
+            appearance: none;
+            font-family: inherit;
+        }
+
+        input:focus {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+            background-color: var(--bg-mid);
+        }
+
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            background-color: var(--accent-green);
+            color: var(--text-light);
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 20px var(--shadow-button);
+        }
+
+        button:hover:not([disabled]) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .card-actions button {
+            padding: 10px;
+            font-size: 0.8rem;
+        }
+
+        button.copy {
+            background-color: rgba(0, 255, 76, 0.2);
+            border: 1px solid var(--border-clear);
+            color: #33ff77;
+            box-shadow: none;
+            margin-top: 10px;
+        }
+
+        button.update {
+            background-color: rgba(13, 187, 161, 0.2);
+            border: 1px solid var(--border-clear);
+            color: var(--accent-green);
+            box-shadow: none;
+            flex: 1;
+        }
+
+        button.delete {
+            background-color: rgba(255, 51, 51, 0.2);
+            border: 1px solid rgba(255, 51, 51, 0.4);
+            color: var(--error-red);
+            box-shadow: none;
+            flex: 1;
+        }
+
+        button.logout {
+            background: rgba(255, 51, 51, 0.15);
+            border: 1px solid rgba(255, 51, 51, 0.4);
+            color: var(--error-red);
+            margin-top: 25px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            padding: 12px;
+            box-shadow: none;
+        }
+
+        .token-item {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: var(--text-light);
+            word-break: break-all;
+        }
+
+        .token-item strong {
+            color: var(--accent-green);
+        }
+
+        .edit-fields {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .info-note {
+            font-size: 0.75rem;
+            color: var(--text-subtle);
+            margin-bottom: 12px;
+        }
+
+        #appContent { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- EKRAN LOGOWANIA -->
+    <div id="loginCard" class="card">
+        <h2>Logowanie</h2>
+        <form id="loginForm">
+            <label>Email:</label>
+            <input type="email" id="emailInput" placeholder="twoj@email.com" required autocapitalize="none" autocorrect="off">
+            
+            <label>Hasło:</label>
+            <input type="password" id="passInput" placeholder="Twoje hasło" required autocapitalize="none" autocorrect="off">
+            
+            <button type="submit" id="loginBtn">Zaloguj się</button>
+        </form>
+    </div>
+
+    <!-- GŁÓWNA APLIKACJA -->
+    <div id="appContent">
+        <div class="card">
+            <h2>Nowy Token</h2>
+            <form id="tokenForm">
+                <label>Pozostałe użycia (uses_left):</label>
+                <input type="number" id="usesLeft" value="1" min="1" required>
+
+                <div class="info-note">⚡ Każdy token wygasa automatycznie po 12 godzinach i jest usuwany 2 godziny po wygaśnięciu.</div>
+
+                <button type="submit" id="submitBtn">Generuj i Zapisz</button>
+            </form>
+        </div>
+
+        <h3>Ostatnie Tokeny</h3>
+        <div id="tokenList">Ładowanie...</div>
+
+        <button class="logout" onclick="logout()">Wyloguj się</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rpmxzjdqcncwmjbegvld.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwbXh6amRxY25jd21qYmVndmxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTAxNTIsImV4cCI6MjEwMzQyNjE1Mn0.5Vl--_6IGK546mZPvzVujkWjscYzQmfzjnXeROBx3pE';
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function formatDateForInput(isoString) {
+            if (!isoString) return '';
+            const d = new Date(isoString);
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            return d.toISOString().slice(0, 16);
+        }
+
+        async function checkSession() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                showApp();
+            }
+        }
+        checkSession();
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerText = 'Logowanie...';
+
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passInput').value.trim();
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            btn.disabled = false;
+            btn.innerText = 'Zaloguj się';
+
+            if (error) {
+                alert('Błąd logowania: ' + error.message);
+            } else {
+                showApp();
+            }
+        });
+
+        function showApp() {
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+            fetchTokens();
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            location.reload();
+        }
+
+        function generateRandomToken() {
+            const array = new Uint8Array(16);
+            crypto.getRandomValues(array);
+            return Array.from(array, b => b.toString(16).padStart(2, '0')).join('').match(/.{1,4}/g).join('-');
+        }
+
+        // Automatyczne usuwanie z bazy tokenów wygasłych dawniej niż 2 godziny temu
+        async function autoDeleteExpiredTokens() {
+            const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+            await supabaseClient
+                .from('tokens')
+                .delete()
+                .lt('expires_at', twoHoursAgo);
+        }
+
+        async function fetchTokens() {
+            await autoDeleteExpiredTokens();
+
+            const listDiv = document.getElementById('tokenList');
+            const { data, error } = await supabaseClient.from('tokens').select('*').order('id', { ascending: false }).limit(10);
+            
+            listDiv.textContent = '';
+
+            if (error) {
+                const p = document.createElement('p');
+                p.style.color = 'var(--error-red)';
+                p.textContent = 'Błąd pobierania danych: ' + error.message;
+                listDiv.appendChild(p);
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                const p = document.createElement('p');
+                p.style.color = 'var(--text-subtle)';
+                p.textContent = 'Brak tokenów w bazie.';
+                listDiv.appendChild(p);
+                return;
+            }
+
+            data.forEach(t => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                // Link
+                const linkItem = document.createElement('div');
+                linkItem.className = 'token-item';
+                const linkStrong = document.createElement('strong');
+                linkStrong.textContent = 'Link: ';
+                linkItem.appendChild(linkStrong);
+                linkItem.appendChild(document.createTextNode('https://roteoxikk-droid.github.io'));
+
+                // Token
+                const tokenItem = document.createElement('div');
+                tokenItem.className = 'token-item';
+                const tokenStrong = document.createElement('strong');
+                tokenStrong.textContent = 'Token: ';
+                tokenItem.appendChild(tokenStrong);
+                tokenItem.appendChild(document.createTextNode(t.token));
+
+                // Przycisk Kopiowania
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy';
+                copyBtn.textContent = 'Skopiuj gotowy tekst';
+                copyBtn.addEventListener('click', () => copyToken(t.token));
+
+                // Sekcja Edycji
+                const editFields = document.createElement('div');
+                editFields.className = 'edit-fields';
+
+                const usesLabel = document.createElement('label');
+                usesLabel.textContent = 'Pozostałe użycia:';
+                const usesInput = document.createElement('input');
+                usesInput.type = 'number';
+                usesInput.value = t.uses_left;
+                usesInput.min = '0';
+
+                const expiresLabel = document.createElement('label');
+                expiresLabel.textContent = 'Data wygaśnięcia:';
+                const expiresInput = document.createElement('input');
+                expiresInput.type = 'datetime-local';
+                expiresInput.value = formatDateForInput(t.expires_at);
+
+                editFields.appendChild(usesLabel);
+                editFields.appendChild(usesInput);
+                editFields.appendChild(expiresLabel);
+                editFields.appendChild(expiresInput);
+
+                // Przyciski Zapisz / Usuń
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'card-actions';
+
+                const updateBtn = document.createElement('button');
+                updateBtn.className = 'update';
+                updateBtn.textContent = 'Zapisz zmiany';
+                updateBtn.addEventListener('click', () => updateToken(t.id, usesInput.value, expiresInput.value));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete';
+                deleteBtn.textContent = 'Usuń';
+                deleteBtn.addEventListener('click', () => deleteToken(t.id));
+
+                actionsDiv.appendChild(updateBtn);
+                actionsDiv.appendChild(deleteBtn);
+
+                card.appendChild(linkItem);
+                card.appendChild(tokenItem);
+                card.appendChild(copyBtn);
+                card.appendChild(editFields);
+                card.appendChild(actionsDiv);
+
+                listDiv.appendChild(card);
+            });
+        }
+
+        // Aktualizacja tokenu (jeśli ustawisz 0 użyć, data wygaśnięcia zostanie zmieniona na TERAZ, aby skkasować go za 2 godz.)
+        async function updateToken(id, usesLeft, expiresAt) {
+            let parsedUses = parseInt(usesLeft, 10);
+            let finalExpiresAt = new Date(expiresAt).toISOString();
+
+            if (parsedUses === 0) {
+                finalExpiresAt = new Date().toISOString();
+            }
+
+            const { error } = await supabaseClient
+                .from('tokens')
+                .update({ 
+                    uses_left: parsedUses, 
+                    expires_at: finalExpiresAt 
+                })
+                .eq('id', id);
+
+            if (error) {
+                alert('Błąd aktualizacji: ' + error.message);
+            } else {
+                alert('Zaktualizowano token!');
+                fetchTokens();
+            }
+        }
+
+        // Usuwanie tokenu
+        async function deleteToken(id) {
+            if (!confirm('Czy na pewno chcesz usunąć ten token?')) return;
+
+            const { error } = await supabaseClient
+                .from('tokens')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert('Błąd usuwania: ' + error.message);
+            } else {
+                fetchTokens();
+            }
+        }
+
+        // Generowanie tokena ważnego automatycznie 12 godzin
+        document.getElementById('tokenForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = 'Zapisywanie...';
+
+            const newToken = generateRandomToken();
+            const uses = parseInt(document.getElementById('usesLeft').value, 10);
+            
+            // Domyślnie 12 godzin od teraz
+            const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
+
+            const { error } = await supabaseClient.from('tokens').insert([
+                { token: newToken, uses_left: uses, expires_at: expires }
+            ]);
+
+            btn.disabled = false;
+            btn.innerText = 'Generuj i Zapisz';
+
+            if (error) {
+                alert('Błąd zapisu w bazie: ' + error.message);
+            } else {
+                document.getElementById('usesLeft').value = '1';
+                fetchTokens();
+            }
+        });
+
+        function copyToken(token) {
+            const text = `Link: https://roteoxikk-droid.github.io\nToken: ${token}`;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Skopiowano do schowka!');
+            });
+        }
+    </script>
+</body>
+</html>

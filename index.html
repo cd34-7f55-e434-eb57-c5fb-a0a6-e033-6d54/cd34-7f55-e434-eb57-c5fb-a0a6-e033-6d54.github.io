@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>mObywatel | #ROTEOXIKK</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-dark: #09020e; 
+            --bg-mid: #00e04b44; 
+            --text-light: #eeeeee;
+            --text-subtle: #777777;
+            --glass-fill: rgba(255, 255, 255, 0.05); 
+            --border-clear: rgba(0, 255, 76, 0.377); 
+            --accent-purple: #0dbba1; 
+            --accent-glow: rgba(0, 247, 103, 0.6);
+            --shadow-button: rgba(0, 255, 85, 0.4);
+            --error-red: #ff3333; 
+        }
+
+        html, body {
+            height: 100%;
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+            background-image: radial-gradient(circle at top left, var(--bg-mid) 5%, transparent 40%),
+                              radial-gradient(circle at bottom right, rgba(0, 255, 76, 0.1) 0%, transparent 45%);
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .login-card {
+            background: var(--glass-fill);
+            backdrop-filter: blur(20px) brightness(1.1);
+            -webkit-backdrop-filter: blur(20px) brightness(1.1);
+            padding: 30px; 
+            border-radius: 28px; 
+            border: 1px solid var(--border-clear);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 20px var(--accent-glow) inset;
+            width: 100%;
+            max-width: 350px; 
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--text-light);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            font-size: 1.6rem;
+            text-shadow: 0 0 10px var(--accent-purple);
+            border-bottom: 1px solid var(--border-clear);
+            padding-bottom: 14px;
+        }
+
+        p.subtitle {
+            color: var(--text-subtle);
+            font-size: 0.85rem;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+            transition: transform 0.2s ease-out;
+        }
+
+        .input-group:focus-within {
+            transform: translateY(-2px);
+            background-color: rgba(0, 255, 76, 0.05);
+            border-radius: 12px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 16px 14px;
+            border: 1px solid var(--border-clear);
+            border-radius: 12px;
+            box-sizing: border-box;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: var(--text-light);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-size: 1rem;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none; 
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+            background-color: var(--bg-mid);
+        }
+
+        ::placeholder {
+            color: var(--text-subtle);
+            opacity: 0.8; 
+        }
+
+        button {
+            width: 100%;
+            padding: 18px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+            background-color: var(--accent-purple);
+            color: var(--text-light);
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 20px var(--shadow-button);
+        }
+
+        button:hover:not([disabled]) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #error-msg {
+            color: var(--error-red);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 18px;
+            min-height: 20px;
+            text-shadow: 0 0 5px rgba(255, 51, 51, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>mObywatel #ROTEOXIKK</h2>
+        <p class="subtitle">Wpisz token</p>
+        
+        <div class="input-group">
+            <input type="text" id="token-input" placeholder="Wpisz token..." autocomplete="off">
+        </div>
+        <button id="submit-btn" onclick="checkToken()">Dalej</button>
+        
+        <div id="error-msg"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rpmxzjdqcncwmjbegvld.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwbXh6amRxY25jd21qYmVndmxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTAxNTIsImV4cCI6MjEwMzQyNjE1Mn0.5Vl--_6IGK546mZPvzVujkWjscYzQmfzjnXeROBx3pE';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function checkToken() {
+            const userToken = document.getElementById('token-input').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+            const submitBtn = document.getElementById('submit-btn');
+            errorMsg.innerText = '';
+
+            if (!userToken) {
+                errorMsg.innerText = 'Wpisz token!';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Sprawdzanie...';
+
+            try {
+                // Wywołanie bezpiecznej funkcji RPC w bazie danych
+                const { data, error } = await supabaseClient.rpc('redeem_token', { 
+                    p_token: userToken 
+                });
+
+                if (error) {
+                    errorMsg.innerText = 'Błąd połączenia z bazą.';
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'Spróbuj ponownie';
+                    return;
+                }
+
+                if (!data.success) {
+                    errorMsg.innerText = data.message;
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'Spróbuj ponownie';
+                    return;
+                }
+
+                // Sukces: Zapisujemy sam token, który zostanie zweryfikowany na gen.html
+                sessionStorage.setItem('userToken', userToken);
+                window.location.href = 'gen.html';
+
+            } catch (err) {
+                errorMsg.innerText = 'Wystąpił nieoczekiwany błąd.';
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Spróbuj ponownie';
+            }
+        }
+
+        document.getElementById('token-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkToken();
+            }
+        });
+    </script>
+</body>
+</html>
