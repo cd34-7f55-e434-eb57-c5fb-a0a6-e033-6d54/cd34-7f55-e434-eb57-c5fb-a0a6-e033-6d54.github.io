@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Generator Tokenów</title>
+    <title>Generator intObywatel</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -236,16 +236,15 @@
         <div class="card">
             <h2>Nowy Token</h2>
             <form id="tokenForm">
-                <label>Pozostałe użycia (uses_left):</label>
+                <label>Użycia:</label>
                 <input type="number" id="usesLeft" value="1" min="1" required>
 
-                <div class="info-note">⚡ Każdy token wygasa automatycznie po 12 godzinach i jest usuwany 2 godziny po wygaśnięciu.</div>
 
-                <button type="submit" id="submitBtn">Generuj i Zapisz</button>
+                <button type="submit" id="submitBtn">Generuj</button>
             </form>
         </div>
 
-        <h3>Ostatnie Tokeny</h3>
+        <h3>Tokeny:</h3>
         <div id="tokenList">Ładowanie...</div>
 
         <button class="logout" onclick="logout()">Wyloguj się</button>
@@ -341,7 +340,7 @@
             if (!data || data.length === 0) {
                 const p = document.createElement('p');
                 p.style.color = 'var(--text-subtle)';
-                p.textContent = 'Brak tokenów w bazie.';
+                p.textContent = 'Brak tokenów.';
                 listDiv.appendChild(p);
                 return;
             }
@@ -377,14 +376,14 @@
                 editFields.className = 'edit-fields';
 
                 const usesLabel = document.createElement('label');
-                usesLabel.textContent = 'Pozostałe użycia:';
+                usesLabel.textContent = 'Użycia:';
                 const usesInput = document.createElement('input');
                 usesInput.type = 'number';
                 usesInput.value = t.uses_left;
                 usesInput.min = '0';
 
                 const expiresLabel = document.createElement('label');
-                expiresLabel.textContent = 'Data wygaśnięcia:';
+                expiresLabel.textContent = 'Wygaśnie:';
                 const expiresInput = document.createElement('input');
                 expiresInput.type = 'datetime-local';
                 expiresInput.value = formatDateForInput(t.expires_at);
@@ -400,7 +399,7 @@
 
                 const updateBtn = document.createElement('button');
                 updateBtn.className = 'update';
-                updateBtn.textContent = 'Zapisz zmiany';
+                updateBtn.textContent = 'Zapisz';
                 updateBtn.addEventListener('click', () => updateToken(t.id, usesInput.value, expiresInput.value));
 
                 const deleteBtn = document.createElement('button');
@@ -441,7 +440,7 @@
             if (error) {
                 alert('Błąd aktualizacji: ' + error.message);
             } else {
-                alert('Zaktualizowano token!');
+                alert('Gotowe.');
                 fetchTokens();
             }
         }
@@ -456,7 +455,7 @@
                 .eq('id', id);
 
             if (error) {
-                alert('Błąd usuwania: ' + error.message);
+                alert('Błąd: ' + error.message);
             } else {
                 fetchTokens();
             }
@@ -483,7 +482,7 @@
             btn.innerText = 'Generuj i Zapisz';
 
             if (error) {
-                alert('Błąd zapisu w bazie: ' + error.message);
+                alert('Błąd zapisu: ' + error.message);
             } else {
                 document.getElementById('usesLeft').value = '1';
                 fetchTokens();
@@ -493,7 +492,7 @@
         function copyToken(token) {
             const text = `Link: https://intobywatel.pl\nToken: ${token}`;
             navigator.clipboard.writeText(text).then(() => {
-                alert('Skopiowano do schowka!');
+                alert('Skopiowano!');
             });
         }
     </script>
