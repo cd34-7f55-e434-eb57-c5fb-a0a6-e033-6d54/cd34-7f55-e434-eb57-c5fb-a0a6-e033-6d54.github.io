@@ -25,7 +25,7 @@
             // Jeśli token jest nieprawidłowy lub wygasł – czyścimy sesję i przekierowujemy
             if (error || !data || !data.valid) {
                 sessionStorage.removeItem('userToken');
-                window.location.href = 'gen.html';
+                window.location.href = 'index.html';
                 return;
             }
 
