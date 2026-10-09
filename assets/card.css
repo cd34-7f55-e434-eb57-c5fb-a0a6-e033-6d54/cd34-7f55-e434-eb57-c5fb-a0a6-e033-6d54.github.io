@@ -159,8 +159,7 @@ body .bottom_bar{
     clip-path: inset(-10px -10px 0px -10px);
     border-radius: 19px 19px 0px 0px;
 
-    object-fit: cover;
-    object-position: top;
+    object-fit: fill;
 }
 
 .other_grid{
