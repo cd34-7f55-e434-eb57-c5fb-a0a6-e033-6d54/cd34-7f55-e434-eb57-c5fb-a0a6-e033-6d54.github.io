@@ -149,7 +149,7 @@ body .bottom_bar{
 .id_image{
     z-index: -1;
     width: 95%;
-    height: 65%;
+    height: 60%;
     margin-left: auto;
     margin-right: auto;
     display: block;
@@ -158,6 +158,9 @@ body .bottom_bar{
     box-shadow: var(--shadow);
     clip-path: inset(-10px -10px 0px -10px);
     border-radius: 19px 19px 0px 0px;
+
+    object-fit: cover;
+    object-position: top;
 }
 
 .other_grid{
